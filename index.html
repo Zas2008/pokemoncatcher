@@ -1,39 +1,51 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Pokémon Catcher Simulator</title>
-<link rel="stylesheet" href="style.css">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Pokémon HOME Builder</title>
+  <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body>
+<body class="min-h-screen bg-slate-950 text-slate-100">
+  <header class="sticky top-0 z-20 backdrop-blur supports-[backdrop-filter]:bg-slate-900/70 bg-slate-900/90 border-b border-slate-800">
+    <div class="max-w-7xl mx-auto px-4 py-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+      <h1 class="text-2xl font-bold tracking-tight">Pokémon HOME Builder</h1>
+      <div class="w-full md:w-2/3 flex items-center gap-3">
+        <input id="search" type="text" placeholder="Search by name or #"
+               class="w-full rounded-2xl bg-slate-800/70 border border-slate-700 px-4 py-3 outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 placeholder-slate-400" />
+        <span id="count" class="whitespace-nowrap text-slate-300 text-sm"></span>
+        <button id="settingsBtn" class="px-3 py-2 rounded-lg bg-slate-700 hover:bg-slate-600">⚙️</button>
+      </div>
+    </div>
+  </header>
 
-<div id="hamburger">☰</div>
-<div id="sidebar">
-  <h2>Catchers</h2>
-  <div id="catchersList"></div>
-  <h2>Targets</h2>
-  <div id="targetsList"></div>
-</div>
+  <main class="max-w-7xl mx-auto px-4 py-6 flex gap-6">
+    <div class="flex-1">
+      <div id="grid" class="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5"></div>
+    </div>
 
-<header>
-  <h1>Pokémon Catcher Simulator</h1>
-  <div class="settings">
-    <span id="trainerNameDisplay">Trainer</span>
-    <span id="settingsIcon">⚙</span>
-  </div>
-  <div id="settingsMenu">
-    <label for="trainerNameInput">Trainer Name:</label>
-    <input type="text" id="trainerNameInput" placeholder="Enter Name">
-    <label for="themeColor">Theme Color:</label>
-    <input type="color" id="themeColor">
-    <button id="closeSettings">Close</button>
-  </div>
-</header>
+    <aside class="w-80 bg-slate-900/90 p-4 rounded-xl sticky top-24 flex-shrink-0">
+      <h2 class="text-lg font-semibold mb-2">Trainer</h2>
+      <input id="trainerName" type="text" placeholder="Enter name" class="w-full rounded-lg px-3 py-2 mb-4 text-black" />
+      <label class="block mb-4">Theme color:
+        <input type="color" id="themeColor" class="w-full h-10 p-1 rounded-lg" />
+      </label>
 
-<input type="text" id="searchInput" placeholder="Search Pokémon...">
-<div id="pokemonList"></div>
+      <div class="flex gap-4 mb-4">
+        <button id="showCatchers" class="flex-1 bg-indigo-600 hover:bg-indigo-500 px-3 py-2 rounded-lg">Catchers</button>
+        <button id="showTargets" class="flex-1 bg-emerald-600 hover:bg-emerald-500 px-3 py-2 rounded-lg">Targets</button>
+      </div>
 
-<script src="app.js"></script>
+      <div id="savedList" class="space-y-2 overflow-y-auto max-h-[500px]"></div>
+    </aside>
+  </main>
+
+  <div id="modalContainer"></div>
+
+  <footer class="max-w-7xl mx-auto px-4 pb-8 text-sm text-slate-400">
+    <p>Data: PokéAPI • Images: Pokémon HOME sprites • Items: Scarlet & Violet sprites</p>
+  </footer>
+
+  <script type="module" src="./app.js"></script>
 </body>
 </html>
