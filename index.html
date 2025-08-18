@@ -3,49 +3,190 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Pokémon HOME Builder</title>
+  <title>Select Your Catcher Pokémon</title>
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="min-h-screen bg-slate-950 text-slate-100">
-  <header class="sticky top-0 z-20 backdrop-blur supports-[backdrop-filter]:bg-slate-900/70 bg-slate-900/90 border-b border-slate-800">
-    <div class="max-w-7xl mx-auto px-4 py-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-      <h1 class="text-2xl font-bold tracking-tight">Pokémon HOME Builder</h1>
-      <div class="w-full md:w-2/3 flex items-center gap-3">
+  <header class="sticky top-0 z-30 backdrop-blur supports-[backdrop-filter]:bg-slate-900/70 bg-slate-900/90 border-b border-slate-800">
+    <div class="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
+      <button id="menuBtn" class="p-2 rounded-xl border border-slate-800 hover:bg-slate-800/60" aria-label="Open Menu">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5"/></svg>
+      </button>
+      <h1 class="text-xl md:text-2xl font-bold tracking-tight">Select Your Catcher Pokémon</h1>
+      <div class="w-10"></div>
+    </div>
+    <div class="max-w-7xl mx-auto px-4 pb-4">
+      <div class="w-full flex items-center gap-3">
         <input id="search" type="text" placeholder="Search by name or #"
                class="w-full rounded-2xl bg-slate-800/70 border border-slate-700 px-4 py-3 outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 placeholder-slate-400" />
         <span id="count" class="whitespace-nowrap text-slate-300 text-sm"></span>
-        <button id="settingsBtn" class="px-3 py-2 rounded-lg bg-slate-700 hover:bg-slate-600">⚙️</button>
       </div>
     </div>
   </header>
 
-  <main class="max-w-7xl mx-auto px-4 py-6 flex gap-6">
-    <div class="flex-1">
-      <div id="grid" class="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5"></div>
-    </div>
-
-    <aside class="w-80 bg-slate-900/90 p-4 rounded-xl sticky top-24 flex-shrink-0">
-      <h2 class="text-lg font-semibold mb-2">Trainer</h2>
-      <input id="trainerName" type="text" placeholder="Enter name" class="w-full rounded-lg px-3 py-2 mb-4 text-black" />
-      <label class="block mb-4">Theme color:
-        <input type="color" id="themeColor" class="w-full h-10 p-1 rounded-lg" />
-      </label>
-
-      <div class="flex gap-4 mb-4">
-        <button id="showCatchers" class="flex-1 bg-indigo-600 hover:bg-indigo-500 px-3 py-2 rounded-lg">Catchers</button>
-        <button id="showTargets" class="flex-1 bg-emerald-600 hover:bg-emerald-500 px-3 py-2 rounded-lg">Targets</button>
-      </div>
-
-      <div id="savedList" class="space-y-2 overflow-y-auto max-h-[500px]"></div>
-    </aside>
+  <main class="max-w-7xl mx-auto px-4 py-6">
+    <div id="grid" class="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5"></div>
   </main>
 
-  <div id="modalContainer"></div>
-
   <footer class="max-w-7xl mx-auto px-4 pb-8 text-sm text-slate-400">
-    <p>Data: PokéAPI • Images: Pokémon HOME sprites • Items: Scarlet & Violet sprites</p>
+    <p>Data: PokéAPI • Images: HOME sprites</p>
   </footer>
 
-  <script type="module" src="./app.js"></script>
+  <div id="confirmWrap" class="fixed inset-0 z-40 hidden">
+    <div class="absolute inset-0 bg-black/60"></div>
+    <div class="absolute inset-x-0 bottom-0 md:inset-0 md:flex md:items-center md:justify-center">
+      <div class="bg-slate-900 border border-slate-800 rounded-2xl m-4 md:max-w-lg w-auto overflow-hidden">
+        <div class="p-4 flex items-center gap-4">
+          <img id="confirmImg" class="w-20 h-20 object-contain" alt="" />
+          <div class="flex-1">
+            <h2 class="text-lg font-semibold">Use this Pokémon as my catcher?</h2>
+            <p id="confirmName" class="text-slate-300 text-sm"></p>
+          </div>
+        </div>
+        <div class="p-4 pt-0 flex justify-end gap-2">
+          <button id="cancelConfirm" class="px-4 py-2 rounded-xl border border-slate-700 hover:bg-slate-800">Cancel</button>
+          <button id="confirmSelect" class="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500">Confirm</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="editorWrap" class="fixed inset-0 z-50 hidden">
+    <div class="absolute inset-0 bg-black/60"></div>
+    <div class="absolute inset-0 overflow-y-auto p-4">
+      <div class="max-w-5xl mx-auto bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden">
+        <div class="p-4 border-b border-slate-800 flex items-center justify-between">
+          <div class="flex items-center gap-3">
+            <img id="editorImg" class="w-16 h-16 object-contain" alt="" />
+            <div>
+              <div id="editorTitle" class="text-xl font-semibold"></div>
+              <div id="editorSubtitle" class="text-sm text-slate-300"></div>
+            </div>
+          </div>
+          <button id="closeEditor" class="p-2 rounded-xl border border-slate-700 hover:bg-slate-800" aria-label="Close">
+            ✕
+          </button>
+        </div>
+
+        <div class="grid md:grid-cols-3 gap-6 p-4">
+          <div class="md:col-span-1 space-y-4">
+            <div class="rounded-2xl border border-slate-800 p-4 space-y-3">
+              <label class="text-sm">Nickname</label>
+              <input id="nickname" class="w-full rounded-xl bg-slate-800/70 border border-slate-700 px-3 py-2 outline-none focus:ring-2 focus:ring-indigo-500" />
+              <label class="text-sm">Level</label>
+              <input id="level" type="number" min="1" max="100" value="100" class="w-full rounded-xl bg-slate-800/70 border border-slate-700 px-3 py-2 outline-none focus:ring-2" />
+              <div class="grid grid-cols-2 gap-3">
+                <div>
+                  <label class="text-sm">Gender</label>
+                  <select id="gender" class="w-full rounded-xl bg-slate-800/70 border border-slate-700 px-3 py-2"></select>
+                </div>
+                <div class="flex items-end gap-2">
+                  <label class="text-sm w-full">Shiny</label>
+                  <label class="inline-flex items-center gap-2">
+                    <input id="shiny" type="checkbox" class="h-5 w-5" />
+                    <span class="text-sm">On</span>
+                  </label>
+                </div>
+              </div>
+              <div class="grid grid-cols-2 gap-3">
+                <div>
+                  <label class="text-sm">Nature</label>
+                  <select id="nature" class="w-full rounded-xl bg-slate-800/70 border border-slate-700 px-3 py-2"></select>
+                </div>
+                <div>
+                  <label class="text-sm">Item</label>
+                  <input id="item" list="itemList" class="w-full rounded-xl bg-slate-800/70 border border-slate-700 px-3 py-2" />
+                  <datalist id="itemList"></datalist>
+                </div>
+              </div>
+              <div>
+                <label class="text-sm">Form</label>
+                <select id="form" class="w-full rounded-xl bg-slate-800/70 border border-slate-700 px-3 py-2"></select>
+              </div>
+              <div class="flex items-center gap-3">
+                <label class="inline-flex items-center gap-2">
+                  <input id="megaToggle" type="checkbox" class="h-5 w-5" />
+                  <span class="text-sm">Mega</span>
+                </label>
+              </div>
+            </div>
+
+            <div class="rounded-2xl border border-slate-800 p-4 space-y-3">
+              <div class="flex items-center justify-between">
+                <h3 class="font-semibold">IVs</h3>
+                <button id="randomIVs" class="text-sm px-2 py-1 rounded-lg border border-slate-700 hover:bg-slate-800">Randomize</button>
+              </div>
+              <div class="grid grid-cols-2 gap-3">
+                <div class="space-y-1"><label class="text-xs">HP</label><input id="iv_hp" type="number" min="0" max="31" value="31" class="w-full rounded-xl bg-slate-800/70 border border-slate-700 px-3 py-2"></div>
+                <div class="space-y-1"><label class="text-xs">Atk</label><input id="iv_atk" type="number" min="0" max="31" value="31" class="w-full rounded-xl bg-slate-800/70 border border-slate-700 px-3 py-2"></div>
+                <div class="space-y-1"><label class="text-xs">Def</label><input id="iv_def" type="number" min="0" max="31" value="31" class="w-full rounded-xl bg-slate-800/70 border border-slate-700 px-3 py-2"></div>
+                <div class="space-y-1"><label class="text-xs">SpA</label><input id="iv_spa" type="number" min="0" max="31" value="31" class="w-full rounded-xl bg-slate-800/70 border border-slate-700 px-3 py-2"></div>
+                <div class="space-y-1"><label class="text-xs">SpD</label><input id="iv_spd" type="number" min="0" max="31" value="31" class="w-full rounded-xl bg-slate-800/70 border border-slate-700 px-3 py-2"></div>
+                <div class="space-y-1"><label class="text-xs">Spe</label><input id="iv_spe" type="number" min="0" max="31" value="31" class="w-full rounded-xl bg-slate-800/70 border border-slate-700 px-3 py-2"></div>
+              </div>
+            </div>
+
+            <div class="rounded-2xl border border-slate-800 p-4 space-y-3">
+              <div class="flex items-center justify-between">
+                <h3 class="font-semibold">EVs</h3>
+                <button id="randomEVs" class="text-sm px-2 py-1 rounded-lg border border-slate-700 hover:bg-slate-800">Randomize</button>
+              </div>
+              <div class="grid grid-cols-2 gap-3">
+                <div class="space-y-1"><label class="text-xs">HP</label><input id="ev_hp" type="number" min="0" max="252" value="0" class="w-full rounded-xl bg-slate-800/70 border border-slate-700 px-3 py-2"></div>
+                <div class="space-y-1"><label class="text-xs">Atk</label><input id="ev_atk" type="number" min="0" max="252" value="0" class="w-full rounded-xl bg-slate-800/70 border border-slate-700 px-3 py-2"></div>
+                <div class="space-y-1"><label class="text-xs">Def</label><input id="ev_def" type="number" min="0" max="252" value="0" class="w-full rounded-xl bg-slate-800/70 border border-slate-700 px-3 py-2"></div>
+                <div class="space-y-1"><label class="text-xs">SpA</label><input id="ev_spa" type="number" min="0" max="252" value="0" class="w-full rounded-xl bg-slate-800/70 border border-slate-700 px-3 py-2"></div>
+                <div class="space-y-1"><label class="text-xs">SpD</label><input id="ev_spd" type="number" min="0" max="252" value="0" class="w-full rounded-xl bg-slate-800/70 border border-slate-700 px-3 py-2"></div>
+                <div class="space-y-1"><label class="text-xs">Spe</label><input id="ev_spe" type="number" min="0" max="252" value="0" class="w-full rounded-xl bg-slate-800/70 border border-slate-700 px-3 py-2"></div>
+              </div>
+              <div class="text-xs text-slate-300">Total: <span id="evTotal">0</span>/510</div>
+            </div>
+          </div>
+
+          <div class="md:col-span-2 space-y-4">
+            <div class="rounded-2xl border border-slate-800 p-4">
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="space-y-3">
+                  <div class="text-sm text-slate-300">Preview</div>
+                  <div class="rounded-xl border border-slate-800 bg-slate-950 p-4 grid place-items-center">
+                    <img id="previewImg" class="w-56 h-56 object-contain" alt="" />
+                  </div>
+                </div>
+                <div class="space-y-3">
+                  <div class="text-sm text-slate-300">Base Stats</div>
+                  <div id="baseStats" class="grid grid-cols-2 gap-x-6 gap-y-2 text-sm"></div>
+                </div>
+              </div>
+            </div>
+
+            <div class="flex justify-end gap-2">
+              <button id="saveCatcher" class="px-5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500">Save Catcher</button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <div id="drawer" class="fixed inset-0 z-40 hidden">
+    <div class="absolute inset-0 bg-black/60"></div>
+    <div class="absolute right-0 top-0 h-full w-full sm:w-[28rem] bg-slate-900 border-l border-slate-800 flex flex-col">
+      <div class="p-4 border-b border-slate-800 flex items-center justify-between">
+        <div class="font-semibold">Menu</div>
+        <button id="closeDrawer" class="p-2 rounded-xl border border-slate-700 hover:bg-slate-800">✕</button>
+      </div>
+      <div class="p-4">
+        <nav class="space-y-2">
+          <button id="navCatchers" class="w-full text-left px-3 py-2 rounded-xl border border-slate-800 hover:bg-slate-800">Catchers</button>
+        </nav>
+      </div>
+      <div id="drawerContent" class="p-4 overflow-y-auto">
+        <div class="text-slate-400 text-sm">Select a section</div>
+      </div>
+    </div>
+  </div>
+
+  <script src="./app.js" type="module"></script>
 </body>
 </html>
