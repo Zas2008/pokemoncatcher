@@ -167,19 +167,20 @@ const openEditor = async (id, name) => {
   nickname.value = "";
   level.value = 100;
 
-  Object.values(ivInputs).forEach((el) => el.value = 31);
-  Object.values(evInputs).forEach((el) => el.value = 0);
+  Object.values(ivInputs).forEach(el => el.value = 31);
+  Object.values(evInputs).forEach(el => el.value = 0);
   updateEVTotal();
 
   const [species, poke, natures, items] = await Promise.all([
-    fetch(API_SPECIES(id)).then(r=>r.json()),
-    fetch(API_POKEMON(id)).then(r=>r.json()),
-    fetch(API_NATURES).then(r=>r.json()),
-    fetch(API_ITEMS).then(r=>r.json())
+    fetch(API_SPECIES(id)).then(r => r.json()),
+    fetch(API_POKEMON(id)).then(r => r.json()),
+    fetch(API_NATURES).then(r => r.json()),
+    fetch(API_ITEMS).then(r => r.json())
   ]);
 
   selectedSpecies = species;
   currentPokemon = poke;
+
   selectedVarieties = species.varieties
     .map(v => {
       const idMatch = v.pokemon.url.match(/\/pokemon\/(\d+)\//);
@@ -190,32 +191,36 @@ const openEditor = async (id, name) => {
 
   const genderOptions = buildGenderOptions(species.gender_rate);
   gender.innerHTML = genderOptions.map(g => `<option value="${g}">${g}</option>`).join("");
-
   nature.innerHTML = natures.results.map(n => `<option value="${n.name}">${n.name}</option>`).join("");
 
-const filteredItems = items.results.filter(it => !it.name.includes("tm") && !it.name.includes("ball"));
-itemList.innerHTML = "";
-for (const it of filteredItems) {
-  const data = await fetch(it.url).then(r => r.json());
-  const sprite = data.sprites?.default;
-  if (!sprite) continue;
-  const option = document.createElement("option");
-  option.value = it.name;
-  option.innerHTML = `<img src="${sprite}" class="inline w-6 h-6 mr-2 align-text-bottom"/> ${it.name}`;
-  itemList.appendChild(option);
-}
+  const filteredItems = items.results.filter(it => !it.name.includes("tm") && !it.name.includes("ball"));
+  itemDropdown.innerHTML = "";
+  for (const it of filteredItems) {
+    const data = await fetch(it.url).then(r => r.json());
+    const sprite = data.sprites?.default;
+    if (!sprite) continue;
+    const li = document.createElement("li");
+    li.className = "flex items-center gap-2 p-2 hover:bg-slate-700 cursor-pointer";
+    li.innerHTML = `<img src="${sprite}" class="w-6 h-6 object-contain"/> ${it.name}`;
+    li.addEventListener("click", () => {
+      itemInput.value = it.name;
+      itemDropdown.classList.add("hidden");
+    });
+    itemDropdown.appendChild(li);
+  }
+  itemInput.addEventListener("focus", () => itemDropdown.classList.remove("hidden"));
+  itemInput.addEventListener("blur", () => setTimeout(() => itemDropdown.classList.add("hidden"), 150));
 
   const nonGenderVarieties = selectedVarieties.filter(v => !v.name.endsWith("-female") && !v.name.endsWith("-male"));
   const formsSorted = nonGenderVarieties
     .slice()
-    .sort((a,b)=>{
+    .sort((a,b) => {
       const am = a.is_default ? -1 : 0;
       const bm = b.is_default ? -1 : 0;
       return am - bm || a.name.localeCompare(b.name);
     });
-
   formSelect.innerHTML = formsSorted.map(v => `<option value="${v.id}">${v.name}</option>`).join("");
-  const defaultVar = formsSorted.find(v=>v.is_default) || formsSorted[0];
+  const defaultVar = formsSorted.find(v => v.is_default) || formsSorted[0];
   formSelect.value = String(defaultVar.id);
 
   const stats = poke.stats.map(s => ({ name: s.stat.name, base: s.base_stat }));
@@ -226,33 +231,11 @@ for (const it of filteredItems) {
     </div>
   `).join("");
 
-  editorSubtitle.textContent = species.genera?.find(g=>g.language.name==="en")?.genus || "Pokémon";
+  editorSubtitle.textContent = species.genera?.find(g => g.language.name === "en")?.genus || "Pokémon";
 
   updatePreview();
 };
 
-const buildGenderOptions = (genderRate) => {
-  if (genderRate === -1) return ["Genderless"];
-  if (genderRate === 0) return ["Male","Female"];
-  if (genderRate === 8) return ["Female","Male"];
-  return ["Male","Female"];
-};
-
-const updatePreview = async () => {
-  const shinyOn = shiny.checked;
-  const chosenId = Number(formSelect.value);
-  editorImg.src = homeImg(chosenId, shinyOn);
-  previewImg.src = homeImg(chosenId, shinyOn);
-  editorImg.onerror = () => { editorImg.src = artworkImg(chosenId); };
-  previewImg.onerror = () => { previewImg.src = artworkImg(chosenId); };
-};
-
-shiny.addEventListener("change", updatePreview);
-formSelect.addEventListener("change", () => {
-  const chosen = selectedVarieties.find(v => v.id === Number(formSelect.value));
-  editorTitle.textContent = `#${pad4(selected.id)} • ${chosen ? chosen.name : selected.name}`;
-  updatePreview();
-});
 
 megaToggle.addEventListener("change", () => {
   const megas = selectedVarieties.filter(v => v.name.includes("-mega"));
