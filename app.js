@@ -175,7 +175,7 @@ const openEditor = async (id, name) => {
     fetch(API_SPECIES(id)).then(r=>r.json()),
     fetch(API_POKEMON(id)).then(r=>r.json()),
     fetch(API_NATURES).then(r=>r.json()),
-    fetch(API_ITEMS).then(r=>r.json())
+    loadItems()
   ]);
 
   selectedSpecies = species;
@@ -191,7 +191,8 @@ const openEditor = async (id, name) => {
   const genderOptions = buildGenderOptions(species.gender_rate);
   gender.innerHTML = genderOptions.map(g => `<option value="${g}">${g}</option>`).join("");
 
-  nature.innerHTML = natures.results.map(n => `<option value="${n.name}">${n.name}</option>`).join("");
+ nature.innerHTML = buildNatureOptions(natures);
+
 
   itemList.innerHTML = items.results.map(it => `<option value="${it.name}"></option>`).join("");
 
@@ -417,3 +418,193 @@ search.addEventListener("input", debounce((e)=>{
 },150));
 
 loadList();
+
+const filterAndSortItems = (items) => {
+  return items
+    .filter(it => {
+      const name = it.name;
+      if (name.includes("ball") || name.includes("tm") || name.includes("hm") || name.includes("tr")) return false;
+      return it.sprites?.["default"]; // only keep items with a sprite
+    })
+    .sort((a, b) => a.name.localeCompare(b.name));
+};
+
+async function loadItems() {
+  const res = await fetch(API_ITEMS);
+  const data = await res.json();
+  const details = await Promise.all(data.results.map(r => fetch(r.url).then(r => r.json())));
+  const usable = filterAndSortItems(details);
+  itemList.innerHTML = usable.map(it => `
+    <option value="${it.name}" data-icon="${it.sprites.default}">${it.name}</option>
+  `).join("");
+}
+
+// === NATURE BOOST/REDUCE ===
+const NATURE_EFFECTS = {
+  adamant: { up: "atk", down: "spa" },
+  modest: { up: "spa", down: "atk" },
+  jolly: { up: "spe", down: "spa" },
+  timid: { up: "spe", down: "atk" },
+  hardy: { up: null, down: null },
+  docile: { up: null, down: null },
+  quirky: { up: null, down: null },
+  serious: { up: null, down: null },
+  bashful: { up: null, down: null },
+  brave: { up: "atk", down: "spe" },
+  lonely: { up: "atk", down: "def" },
+  relaxed: { up: "def", down: "spe" },
+  impish: { up: "def", down: "spa" },
+  careful: { up: "spd", down: "spa" },
+  timid: { up: "spe", down: "atk" },
+  hasty: { up: "spe", down: "def" },
+  naive: { up: "spe", down: "spd" },
+  bold: { up: "def", down: "atk" },
+  lax: { up: "def", down: "spd" },
+  modest: { up: "spa", down: "atk" },
+  mild: { up: "spa", down: "def" },
+  quiet: { up: "spa", down: "spe" },
+  rash: { up: "spa", down: "spd" },
+  calm: { up: "spd", down: "atk" },
+  gentle: { up: "spd", down: "def" },
+  sassy: { up: "spd", down: "spe" },
+  careful: { up: "spd", down: "spa" }
+};
+
+function buildNatureOptions(natures) {
+  return natures.results.map(n => {
+    const eff = NATURE_EFFECTS[n.name];
+    if (!eff) {
+      return `<option value="${n.name}">${n.name}</option>`;
+    }
+    if (!eff.up) {
+      return `<option value="${n.name}">${n.name} (neutral)</option>`;
+    }
+    return `<option value="${n.name}">${n.name} (+${eff.up}, -${eff.down})</option>`;
+  }).join("");
+}
+
+
+
+// === AUTOPICK NATURE FROM EV SIGNS ===
+function autoPickNature() {
+  const text = Object.entries(evInputs)
+    .map(([stat, el]) => el.value.trim())
+    .join(" ");
+  const matchPlus = text.match(/\+([A-Za-z]+)/);
+  const matchMinus = text.match(/-([A-Za-z]+)/);
+
+  if (matchPlus && matchMinus) {
+    const up = matchPlus[1].toLowerCase();
+    const down = matchMinus[1].toLowerCase();
+    const found = Object.entries(NATURE_EFFECTS).find(([n, eff]) => eff.up === up && eff.down === down);
+    if (found) {
+      nature.value = found[0];
+      return;
+    }
+  }
+
+  // neutral random if nothing else
+  const neutral = ["hardy", "docile", "quirky", "serious", "bashful"];
+  nature.value = neutral[Math.floor(Math.random() * neutral.length)];
+}
+
+saveBtn.addEventListener("click", () => { 
+  if (!nature.value) autoPickNature(); 
+  savePokemon("catchers"); 
+});
+document.getElementById("saveTarget").addEventListener("click", () => { 
+  if (!nature.value) autoPickNature(); 
+  savePokemon("targets"); 
+});
+
+
+// === TRAINER NAME SAVE ===
+const trainerNameDisplay = document.getElementById("trainerNameDisplay");
+const editTrainerBtn = document.getElementById("editTrainer");
+
+function loadTrainerName() {
+  const n = localStorage.getItem("trainerName") || "Trainer";
+  trainerNameDisplay.textContent = n;
+}
+function setTrainerName() {
+  const n = prompt("Enter your trainer name:", trainerNameDisplay.textContent);
+  if (n) {
+    localStorage.setItem("trainerName", n);
+    trainerNameDisplay.textContent = n;
+  }
+}
+editTrainerBtn.addEventListener("click", setTrainerName);
+loadTrainerName();
+
+
+// === SAVE CATCHER OR TARGET ===
+function savePokemon(type) {
+  const chosen = selectedVarieties.find(v => v.id === Number(formSelect.value)) || { id: selected.id, name: selected.name };
+  const entry = {
+    speciesId: selected.id,
+    nationalName: selected.name,
+    varietyId: chosen.id,
+    varietyName: chosen.name,
+    nickname: nickname.value.trim(),
+    level: clamp(Number(level.value||100),1,100),
+    gender: gender.value,
+    shiny: shiny.checked,
+    nature: nature.value || null,
+    item: itemInput.value.trim() || null,
+    ivs: getIVs(),
+    evs: getEVs(),
+    savedAt: Date.now(),
+  };
+  const store = JSON.parse(localStorage.getItem(type) || "[]");
+  store.push(entry);
+  localStorage.setItem(type, JSON.stringify(store));
+  editorWrap.classList.add("hidden");
+  openDrawer();
+  renderList(type);
+}
+
+// === DRAWER RENDER FOR BOTH ===
+navCatchers.addEventListener("click", ()=> renderList("catchers"));
+document.getElementById("navTargets").addEventListener("click", ()=> renderList("targets"));
+
+function renderList(type) {
+  const store = JSON.parse(localStorage.getItem(type) || "[]");
+  if (!store.length) {
+    drawerContent.innerHTML = `<div class="text-slate-300">No saved ${type} yet.</div>`;
+    return;
+  }
+  const list = document.createElement("div");
+  list.className = "space-y-3";
+  store.slice().reverse().forEach((c, idx) => {
+    const card = document.createElement("div");
+    card.className = "rounded-2xl border border-slate-800 p-3 flex items-center gap-3";
+    const img = document.createElement("img");
+    img.className = "w-16 h-16 object-contain";
+    img.src = homeImg(c.varietyId, c.shiny);
+    img.onerror = () => { img.src = artworkImg(c.varietyId); };
+    const info = document.createElement("div");
+    info.className = "flex-1";
+    const title = c.nickname ? `${c.nickname} • ${c.varietyName}` : c.varietyName;
+    info.innerHTML = `
+      <div class="font-semibold capitalize">${title}</div>
+      <div class="text-sm text-slate-300">Lv. ${c.level} • ${c.gender} • ${c.nature || "no nature"} • ${c.item || "no item"}</div>
+    `;
+    const del = document.createElement("button");
+    del.className = "px-3 py-1 rounded-lg border border-red-500/40 text-red-300 hover:bg-red-500/10";
+    del.textContent = "Delete";
+    del.addEventListener("click", ()=>{
+      const all = JSON.parse(localStorage.getItem(type) || "[]");
+      const trueIndex = all.length - 1 - idx;
+      all.splice(trueIndex,1);
+      localStorage.setItem(type, JSON.stringify(all));
+      renderList(type);
+    });
+    card.appendChild(img);
+    card.appendChild(info);
+    card.appendChild(del);
+    list.appendChild(card);
+  });
+  drawerContent.innerHTML = "";
+  drawerContent.appendChild(list);
+}
+
