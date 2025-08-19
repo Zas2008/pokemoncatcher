@@ -193,7 +193,17 @@ const openEditor = async (id, name) => {
 
   nature.innerHTML = natures.results.map(n => `<option value="${n.name}">${n.name}</option>`).join("");
 
-  itemList.innerHTML = items.results.map(it => `<option value="${it.name}"></option>`).join("");
+const filteredItems = items.results.filter(it => !it.name.includes("tm") && !it.name.includes("ball"));
+itemList.innerHTML = "";
+for (const it of filteredItems) {
+  const data = await fetch(it.url).then(r => r.json());
+  const sprite = data.sprites?.default;
+  if (!sprite) continue;
+  const option = document.createElement("option");
+  option.value = it.name;
+  option.innerHTML = `<img src="${sprite}" class="inline w-6 h-6 mr-2 align-text-bottom"/> ${it.name}`;
+  itemList.appendChild(option);
+}
 
   const nonGenderVarieties = selectedVarieties.filter(v => !v.name.endsWith("-female") && !v.name.endsWith("-male"));
   const formsSorted = nonGenderVarieties
