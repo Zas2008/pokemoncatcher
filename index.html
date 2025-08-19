@@ -13,12 +13,6 @@
         <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5"/></svg>
       </button>
       <h1 class="text-xl md:text-2xl font-bold tracking-tight">Select Your Catcher Pokémon</h1>
-      <div class="flex items-center gap-2">
-  <span id="trainerNameDisplay" class="font-medium"></span>
-  <button id="editTrainer" class="p-1 rounded-lg border border-slate-700 hover:bg-slate-800" aria-label="Edit Trainer">
-    ⚙️
-  </button>
-</div>
       <div class="w-10"></div>
     </div>
     <div class="max-w-7xl mx-auto px-4 pb-4">
@@ -45,7 +39,7 @@
         <div class="p-4 flex items-center gap-4">
           <img id="confirmImg" class="w-20 h-20 object-contain" alt="" />
           <div class="flex-1">
-            <h2 class="text-lg font-semibold">Use this Pokémon as the catcher/target?</h2>
+            <h2 class="text-lg font-semibold">Use this Pokémon as my catcher?</h2>
             <p id="confirmName" class="text-slate-300 text-sm"></p>
           </div>
         </div>
@@ -167,7 +161,6 @@
 
             <div class="flex justify-end gap-2">
               <button id="saveCatcher" class="px-5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500">Save Catcher</button>
-              <button id="saveTarget" class="px-5 py-2 rounded-xl bg-pink-600 hover:bg-pink-500">Save Target</button>
             </div>
           </div>
         </div>
@@ -186,7 +179,6 @@
       <div class="p-4">
         <nav class="space-y-2">
           <button id="navCatchers" class="w-full text-left px-3 py-2 rounded-xl border border-slate-800 hover:bg-slate-800">Catchers</button>
-          <button id="navTargets" class="w-full text-left px-3 py-2 rounded-xl border border-slate-800 hover:bg-slate-800">Targets</button>
         </nav>
       </div>
       <div id="drawerContent" class="p-4 overflow-y-auto">
